@@ -24,8 +24,8 @@ A modern GraphQL API built with GraphQL Yoga, Prisma, and TypeScript, featuring 
 1. Clone the repository:
 
 ```bash
-git clone <repository-url>
-cd Nodejs/GraphQL/Yoga
+git clone https://github.com/ailton-moreira/GraphQLYoga.git
+cd GraphQLYoga
 ```
 
 2. Install dependencies:
@@ -34,6 +34,8 @@ cd Nodejs/GraphQL/Yoga
 npm install
 # or
 yarn install
+# or
+pnpm install
 ```
 
 3. Set up environment variables:
