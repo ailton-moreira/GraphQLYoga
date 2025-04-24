@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GraphQL File Upload Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .container {
+        background-color: #f5f5f5;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #333;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      button {
+        background-color: #4caf50;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      pre {
+        background-color: #f8f8f8;
+        padding: 10px;
+        border-radius: 4px;
+        overflow-x: auto;
+      }
+      .result {
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>GraphQL File Upload Test</h1>
+
+      <div class="form-group">
+        <label for="fileInput">Select a file to upload:</label>
+        <input type="file" id="fileInput" />
+      </div>
+
+      <button id="uploadBtn">Upload Single File</button>
+
+      <div class="form-group">
+        <label for="multipleFilesInput">Select multiple files to upload:</label>
+        <input type="file" id="multipleFilesInput" multiple />
+      </div>
+
+      <button id="uploadMultipleBtn">Upload Multiple Files</button>
+
+      <div class="result">
+        <h3>Result:</h3>
+        <pre id="result">No result yet</pre>
+      </div>
+    </div>
+
+    <script>
+      // Single file upload
+      document
+        .getElementById("uploadBtn")
+        .addEventListener("click", async () => {
+          const fileInput = document.getElementById("fileInput");
+          const file = fileInput.files[0];
+          if (!file) {
+            alert("Please select a file to upload");
+            return;
+          }
+
+          // Create the operations object for GraphQL
+          const operations = {
+            query: `
+          mutation UploadFile($file: Upload!) {
+            uploadFile(file: $file) {
+              id
+              filename
+              mimetype
+              encoding
+              url
+            }
+          }
+        `,
+            variables: {
+              file: null,
+            },
+          };
+
+          // Create the map for mapping variables to files
+          const map = {
+            0: ["variables.file"],
+          };
+
+          // Create FormData
+          const formData = new FormData();
+          formData.append("operations", JSON.stringify(operations));
+          formData.append("map", JSON.stringify(map));
+          formData.append("0", file);
+
+          try {
+            const response = await fetch("http://localhost:4000/graphql", {
+              method: "POST",
+              body: formData,
+            });
+
+            const result = await response.json();
+            document.getElementById("result").textContent = JSON.stringify(
+              result,
+              null,
+              2
+            );
+          } catch (error) {
+            document.getElementById("result").textContent =
+              "Error: " + error.message;
+          }
+        });
+
+      // Multiple files upload
+      document
+        .getElementById("uploadMultipleBtn")
+        .addEventListener("click", async () => {
+          const fileInput = document.getElementById("multipleFilesInput");
+          const files = fileInput.files;
+          if (!files.length) {
+            alert("Please select files to upload");
+            return;
+          }
+
+          // Create the operations object for GraphQL
+          const operations = {
+            query: `
+          mutation UploadFiles($files: [Upload!]!) {
+            uploadMultipleFiles(files: $files) {
+              id
+              filename
+              mimetype
+              encoding
+              url
+            }
+          }
+        `,
+            variables: {
+              files: Array(files.length).fill(null),
+            },
+          };
+
+          // Create the map for mapping variables to files
+          const map = {};
+          for (let i = 0; i < files.length; i++) {
+            map[i] = [`variables.files.${i}`];
+          }
+
+          // Create FormData
+          const formData = new FormData();
+          formData.append("operations", JSON.stringify(operations));
+          formData.append("map", JSON.stringify(map));
+
+          // Add each file to the form data
+          for (let i = 0; i < files.length; i++) {
+            formData.append(`${i}`, files[i]);
+          }
+
+          try {
+            const response = await fetch("http://localhost:4000/graphql", {
+              method: "POST",
+              body: formData,
+            });
+
+            const result = await response.json();
+            document.getElementById("result").textContent = JSON.stringify(
+              result,
+              null,
+              2
+            );
+          } catch (error) {
+            document.getElementById("result").textContent =
+              "Error: " + error.message;
+          }
+        });
+    </script>
+  </body>
+</html>

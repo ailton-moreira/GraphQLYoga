@@ -1,0 +1,314 @@
+# User represents individuals who interact with the system
+# Import the Upload scalar for file uploads
+scalar Upload
+
+# File type to represent uploaded files
+type File {
+  id: ID!
+  filename: String!
+  mimetype: String!
+  encoding: String!
+  url: String!
+  user: User
+  createdAt: String!
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  password: String!
+  reviews: [Review!]! # Reviews written by the user
+  posts: [Post!]! # Posts created by the user
+  comments: [Comment!]! # Comments made by the user
+  books: [Book!]! # Books written by the user
+  files: [File!]! # Files uploaded by the user
+}
+
+# Author represents book authors
+type Author {
+  id: ID!
+  name: String!
+  bio: String
+  books: [Book!]! # Books written by the author
+  posts: [Post!]! # Posts written by the author
+  comments: [Comment!]! # Comments made by the author
+}
+
+# Book represents a book in the system
+type Book {
+  id: ID!
+  title: String!
+  description: String!
+  author: User!
+  reviews: [Review!]! # Reviews of the book
+  published: Boolean!
+}
+
+# Review represents a user's review of a book
+type Review {
+  id: ID!
+  comment: String!
+  rating: Int!
+  author: User!
+  book: Book!
+  published: Boolean!
+}
+
+# Post represents a user-created post
+type Post {
+  id: ID!
+  title: String!
+  content: String!
+  author: User!
+  comments: [Comment!]! # Comments on the post
+  published: Boolean!
+}
+
+# Comment represents a user's comment on a post
+type Comment {
+  id: ID!
+  content: String!
+  author: User!
+  post: Post!
+  published: Boolean!
+}
+
+# Pagination input types
+input PaginationInput {
+  skip: Int
+  take: Int
+  cursor: ID
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: ID
+  endCursor: ID
+}
+
+type PostConnection {
+  data: [PostEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type PostEdge {
+  node: Post!
+  cursor: ID!
+}
+
+type BookConnection {
+  data: [BookEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type BookEdge {
+  node: Book!
+  cursor: ID!
+}
+
+type ReviewConnection {
+  data: [ReviewEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type ReviewEdge {
+  node: Review!
+  cursor: ID!
+}
+
+type CommentConnection {
+  data: [CommentEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type CommentEdge {
+  node: Comment!
+  cursor: ID!
+}
+
+# Query type for data retrieval
+type Query {
+  count: Int!
+  # User queries
+  me: User!
+  users(pagination: PaginationInput): [User!]!
+  user(id: ID!): User
+
+  # Post queries
+  posts(pagination: PaginationInput): PostConnection!
+  post(id: ID!): Post
+  myPosts(pagination: PaginationInput): PostConnection!
+
+  # Book queries
+  books(pagination: PaginationInput): BookConnection!
+  book(id: ID!): Book
+
+  # Comment queries
+  comments(pagination: PaginationInput): CommentConnection!
+
+  # Review queries
+  reviews(pagination: PaginationInput): ReviewConnection!
+
+  # Search functionality
+  search(query: String!, pagination: PaginationInput): [SearchResult!]!
+}
+
+# Union type for search results
+union SearchResult = Post | Book | Comment | Review
+
+# Input types for mutations
+input CreateUserInput {
+  email: String!
+  password: String!
+  name: String!
+}
+
+input LoginUserInput {
+  email: String!
+  password: String!
+}
+
+input UpdateUserInput {
+  name: String
+  email: String
+  password: String
+}
+
+input CreatePostInput {
+  title: String!
+  content: String!
+  published: Boolean!
+}
+
+input UpdatePostInput {
+  title: String
+  content: String
+  published: Boolean
+}
+
+input CreateBookInput {
+  title: String!
+  description: String!
+  published: Boolean!
+}
+
+input UpdateBookInput {
+  title: String
+  description: String
+  published: Boolean
+}
+
+input CreateCommentInput {
+  content: String!
+  postId: ID!
+  published: Boolean!
+}
+
+input UpdateCommentInput {
+  content: String
+  published: Boolean
+}
+
+input CreateReviewInput {
+  comment: String!
+  rating: Int!
+  bookId: ID!
+  published: Boolean!
+}
+
+input UpdateReviewInput {
+  comment: String
+  rating: Int
+  published: Boolean
+}
+
+input FileUploadInput {
+  file: Upload!
+  description: String
+}
+
+# Mutation type for data manipulation
+type Mutation {
+  count(data: Int): Int!
+  # User mutations
+  createUser(data: CreateUserInput!): User!
+  login(data: LoginUserInput!): AuthPayload!
+  deleteUser(id: ID!): User!
+  updateUser(id: ID!, data: UpdateUserInput!): User!
+
+  # Post mutations
+  createPost(data: CreatePostInput!): Post!
+  updatePost(id: ID!, data: UpdatePostInput!): Post!
+  deletePost(id: ID!): Post!
+
+  # Book mutations
+  createBook(data: CreateBookInput!): Book!
+  updateBook(id: ID!, data: UpdateBookInput!): Book!
+  deleteBook(id: ID!): Book!
+
+  # Comment mutations
+  createComment(data: CreateCommentInput!): Comment!
+  updateComment(id: ID!, data: UpdateCommentInput!): Comment!
+  deleteComment(id: ID!): Comment!
+
+  # Review mutations
+  createReview(data: CreateReviewInput!): Review!
+  updateReview(id: ID!, data: UpdateReviewInput!): Review!
+  deleteReview(id: ID!): Review!
+
+  # File mutations
+  uploadFile(file: Upload!): File!
+  uploadMultipleFiles(files: [Upload!]!): [File!]!
+  deleteFile(id: ID!): File!
+}
+
+type Subscription {
+  count: Int!
+  post: PostSubscriptionPayload!
+  comment(postId: ID!): CommentSubscriptionPayload!
+  book: BookSubscriptionPayload!
+  review(bookId: ID!): ReviewSubscriptionPayload!
+  user: UserSubscriptionPayload!
+}
+
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
+enum MutationType {
+  CREATED
+  UPDATED
+  DELETED
+}
+
+type PostSubscriptionPayload {
+  mutation: MutationType!
+  node: Post!
+}
+
+type CommentSubscriptionPayload {
+  mutation: MutationType!
+  node: Comment!
+}
+
+type BookSubscriptionPayload {
+  mutation: MutationType!
+  node: Book!
+}
+
+type ReviewSubscriptionPayload {
+  mutation: MutationType!
+  node: Review!
+}
+
+type UserSubscriptionPayload {
+  mutation: MutationType!
+  node: User!
+}
